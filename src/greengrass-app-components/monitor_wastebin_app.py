@@ -1,4 +1,4 @@
-# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
 # SPDX-License-Identifier: MIT-0
 
 import os
@@ -19,7 +19,6 @@ def monitor_waste_bin():
         try:
             current_distance = sensors.measure_distance()
             if current_distance <= 15.0:
-                time.sleep(5) # Delay of 5 seconds
                 # Take waste photo
                 waste_image_timestamp = sensors.trigger_camera(
                     sensors._shutter_speed_in_micro_secs, sensors._clip_duration_in_msec
@@ -36,8 +35,7 @@ def monitor_waste_bin():
                 # Publish waste distance data to IoT core
                 publisher.publish(event)
                 print(f"Published distance data : {event}")
-
-            time.sleep(35) # To ensure that images are not captured constantly and only once every 40 seconds
+                time.sleep(10) # To ensure that images are not captured constantly and only once every 10 seconds
 
         except Exception as e:
             # Catch I/O exception to ignore and continue

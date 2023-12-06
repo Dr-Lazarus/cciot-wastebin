@@ -1,4 +1,4 @@
-# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
 # SPDX-License-Identifier: MIT-0
 
 import os
@@ -87,8 +87,8 @@ class Sensors:
             "postcode": self._sensor_deployed_post_code,
             "latitude": 51.579677,
             "longitude": -0.335836,
-            "country": "United Kingdom",
-            "city": "London",
+            "country": "Singapore",
+            "city": "Singapore",
         }
 
         return event

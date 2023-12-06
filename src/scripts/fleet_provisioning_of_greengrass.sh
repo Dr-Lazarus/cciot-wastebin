@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
 #SPDX-License-Identifier: MIT-0
 
 if [ -z "$2" ]; then
@@ -10,7 +10,7 @@ else
   STACK_NAME="$1"
   AWS_REGION="$2"
   THING_NAME=$([ -z "$3" ] && echo "DemoWasteBin")
-  LOCATION=$([ -z "$4" ] && echo "London")
+  LOCATION=$([ -z "$4" ] && echo "Singapore")
   THING_SERIAL_NO=$([ -z "$5" ] && echo "W123")
   GG_VERSION=$([ -z "$6" ] && echo "2.5.4")
 fi

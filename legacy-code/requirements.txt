@@ -1,4 +1,0 @@
-awsiotsdk
-cbor2
-invoke
-git+https://github.com/aws-greengrass/aws-greengrass-stream-manager-sdk-python.git
