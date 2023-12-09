@@ -1,6 +1,3 @@
-
-# SPDX-License-Identifier: MIT-0
-
 import os
 import random
 import sys
@@ -15,10 +12,17 @@ from sensors import Sensors
 def monitor_waste_bin():
     current_distance = 0.0
     waste_image_timestamp = 0
+    consecutive_measurements = 0  # Counter for consecutive measurements
+
     while True:
         try:
             current_distance = sensors.measure_distance()
-            if current_distance <= 15.0:
+            if current_distance <= 14.0:
+                consecutive_measurements += 1
+            else:
+                consecutive_measurements = 0  # Reset counter if measurement is not less than 15.0
+
+            if consecutive_measurements >= 3:
                 # Take waste photo
                 waste_image_timestamp = sensors.trigger_camera(
                     sensors._shutter_speed_in_micro_secs, sensors._clip_duration_in_msec
@@ -35,7 +39,10 @@ def monitor_waste_bin():
                 # Publish waste distance data to IoT core
                 publisher.publish(event)
                 print(f"Published distance data : {event}")
-                time.sleep(10) # To ensure that images are not captured constantly and only once every 10 seconds
+
+                # Reset the counter after capturing the image
+                consecutive_measurements = 0
+                time.sleep(30)  # To ensure that images are not captured constantly and only once every 30 seconds
 
         except Exception as e:
             # Catch I/O exception to ignore and continue

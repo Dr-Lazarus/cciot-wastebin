@@ -2,9 +2,6 @@
 /config.mk
 /cfn/packaged.template
 
-### SAM template
-# gitignore template for AWS Serverless Application Model project
-# website: https://docs.aws.amazon.com/serverless-application-model
 
 # Ignore build folder
 .aws-sam/
@@ -259,3 +256,5 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+cfn

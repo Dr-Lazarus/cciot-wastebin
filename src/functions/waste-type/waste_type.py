@@ -1,9 +1,8 @@
 import datetime
 import json
 import time
-
 import boto3
-
+#import paho.mqtt.client as mqtt
 
 def get_event_date(event):
     if "timestamp" in event[0]:
@@ -12,6 +11,23 @@ def get_event_date(event):
         mytimestamp = datetime.datetime.fromtimestamp(time.time())
     return mytimestamp.strftime("%Y%m%d")
 
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        print("Connected to MQTT Broker!")
+
+# client = mqtt.Client(client_id="", userdata=None, protocol=mqtt.MQTTv5)
+# client.on_connect = on_connect
+
+# client.tls_set(tls_version=mqtt.ssl.PROTOCOL_TLS)
+# client.username_pw_set("cciot", "Cciot@2023")
+# client.connect("186077b180d64afd9c220eddfe25bffd.s2.eu.hivemq.cloud", 8883)
+
+def publish_result(iot_client, result):
+    iot_client.publish(
+        topic="Waste/Detect",
+        qos=1,
+        payload=str(result)
+    )
 
 def lambda_handler(event, context):
     if len(event) > 0 and "s3_image_uri" in event[0]:
@@ -21,12 +37,10 @@ def lambda_handler(event, context):
         bucket = output[2]
         photo = output[3]
         client = boto3.client("rekognition")
-        # process using S3 object
+        iot_client = boto3.client('iot-data')
+
         try:
             time.sleep(5)
-            # If using custom models, then please use below syntax
-            # response = client.detect_custom_labels(Image={'S3Object': {'Bucket': bucket, 'Name': photo}},
-            # MinConfidence=30,ProjectVersionArn=model_arn)
             response = client.detect_labels(
                 Image={"S3Object": {"Bucket": bucket, "Name": photo}}, MaxLabels=10
             )
@@ -38,50 +52,20 @@ def lambda_handler(event, context):
             event[0]["hazardous_waste"] = 0
             event[0]["other_waste"] = 0
             return event
-        # Get the custom labels
-        # labels=response['CustomLabels']
+
         labels = response["Labels"]
-        solid_waste = 0
-        organic_waste = 0
-        hazardous_waste = 0
-        other_waste = 0
-        sorted_waste_items = []
-        organic_waste_dict = [
-            "orange",
-            "bread",
-            "banana",
-            "orange peel",
-            "apple",
-            "onion",
-            "vegatable",
-            "potato",
-        ]
-        solid_waste_dict = [
-            "cardboard",
-            "plastic",
-            "paper",
-            "bottle",
-            "polethene",
-            "paper ball",
-        ]
-        hazardous_waste_dict = ["batteries"]
-        for label in labels:
-            if label["Name"] in organic_waste_dict:
-                organic_waste += 1
-            elif label["Name"] in solid_waste_dict:
-                solid_waste += 1
-            elif label["Name"] in hazardous_waste_dict:
-                hazardous_waste += 1
-            else:
-                other_waste += 1
-            if label["Name"] not in sorted_waste_items:
-                sorted_waste_items.append(label["Name"])
+        sorted_waste_items = [label["Name"] for label in labels]
+        organic_waste_detected = any(label["Name"] in  ["orange", "bread", "banana", "orange peel", "apple", "onion","vegetable", "potato", "tomato", "eggplant", "aubergine", "Food", "Peel", "banana peel", "peel"] for label in labels)
+
         event[0]["sorted_waste"] = sorted_waste_items
-        event[0]["organic_waste"] = organic_waste
-        event[0]["solid_waste"] = solid_waste
-        event[0]["hazardous_waste"] = hazardous_waste
-        event[0]["other_waste"] = other_waste
+        event[0]["organic_waste"] = int(organic_waste_detected)
+        event[0]["solid_waste"] = int(not organic_waste_detected)
+        event[0]["hazardous_waste"] = 0
+        event[0]["other_waste"] = 0
         event[0]["event_date"] = get_event_date(event)
+
+        publish_result(iot_client, 1 if organic_waste_detected else 2)
+        #client.publish("Waste/Detect", str(1 if organic_waste_detected else 2), qos=1)
         print(event)
     else:
         sorted_waste_items = []
